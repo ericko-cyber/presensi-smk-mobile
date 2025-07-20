@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
+import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatelessWidget {
   final Map<String, dynamic>? siswaData;
 
   const ProfilePage({Key? key, this.siswaData}) : super(key: key);
+
+  Future<void> logoutUser(String token) async {
+    final response = await http.post(
+      Uri.parse('http://192.168.172.224:8000/api/logout'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      print('Logout success');
+    } else {
+      print('Logout failed: ${response.body}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +127,13 @@ class ProfilePage extends StatelessWidget {
 
           // Logout
           ElevatedButton.icon(
-            onPressed: () {
+            onPressed: () async {
+              final token =
+                  siswaData?['token']; // pastikan kamu simpan token ini saat login
+              if (token != null) {
+                await logoutUser(token);
+              }
+
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const Login()),

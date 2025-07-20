@@ -14,7 +14,10 @@ class _LoginState extends State<Login> {
   final TextEditingController nisnController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  bool _isLoading = false;
+
   void handleLogin() async {
+    if (_isLoading) return; // Hindari double submit
     String nis = nisnController.text.trim();
     String password = passwordController.text.trim();
 
@@ -25,15 +28,14 @@ class _LoginState extends State<Login> {
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.103:8000/api/login'),
+        Uri.parse('http://192.168.172.224:8000/api/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'nis': nis, 'password': password}),
       );
-
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -43,7 +45,6 @@ class _LoginState extends State<Login> {
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
 
-        // Navigasi ke HomePage, kirim data siswa
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -59,10 +60,11 @@ class _LoginState extends State<Login> {
         ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
-      print('Terjadi error saat login: $e');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Terjadi error: $e')));
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
